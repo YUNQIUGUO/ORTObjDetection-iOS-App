@@ -1,0 +1,3 @@
+${PODS_ROOT}/Target Support Files/Pods-ORTObjectDetection/Pods-ORTObjectDetection-frameworks.sh
+${PODS_ROOT}/onnxruntime-mobile-c/onnxruntime.framework
+${BUILT_PRODUCTS_DIR}/onnxruntime-mobile-objc/onnxruntime_mobile_objc.framework
