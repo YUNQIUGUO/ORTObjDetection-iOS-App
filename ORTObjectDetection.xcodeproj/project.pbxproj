@@ -20,6 +20,8 @@
 		51A25D66266EA7AE0087C801 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A25D65266EA7AE0087C801 /* CameraManager.swift */; };
 		51A25D6926715ECD0087C801 /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A25D6826715ECD0087C801 /* OverlayView.swift */; };
 		51A25D6D2671A1F10087C801 /* labels.txt in Resources */ = {isa = PBXBuildFile; fileRef = 51A25D6C2671A1F10087C801 /* labels.txt */; };
+		51A25D742672DEA00087C801 /* ssd_mobilenet_v2_300_float.all.ort in Resources */ = {isa = PBXBuildFile; fileRef = 51A25D722672C03B0087C801 /* ssd_mobilenet_v2_300_float.all.ort */; };
+		51A25D752672DEA50087C801 /* ssd_mobilenet_v1.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 51A25D712672BD500087C801 /* ssd_mobilenet_v1.onnx */; };
 		B86BABC010BE9D9CD56438D2 /* Pods_ORTObjectDetection.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA4CC5B0F9949CCA78381B36 /* Pods_ORTObjectDetection.framework */; };
 /* End PBXBuildFile section */
 
@@ -193,6 +195,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				51A25D752672DEA50087C801 /* ssd_mobilenet_v1.onnx in Resources */,
+				51A25D742672DEA00087C801 /* ssd_mobilenet_v2_300_float.all.ort in Resources */,
 				51A25D5B266E9CA60087C801 /* Main.storyboard in Resources */,
 				51A25D5A266E9CA60087C801 /* LaunchScreen.storyboard in Resources */,
 				51A25D4D266E9C3E0087C801 /* Assets.xcassets in Resources */,

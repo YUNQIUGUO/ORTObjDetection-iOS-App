@@ -144,8 +144,9 @@ class ModelHandler: NSObject {
                                        shape: [1, 300, 300, 3])
         /// Run ORT InferenceSession
         let startDate = Date()
-        let outputs = try session.run(withInputs:[inputName: inputTensor],
-                                      outputNames: ["TFLite_Detection_PostProcess",                                                      "TFLite_Detection_PostProcess:1",                                                    "TFLite_Detection_PostProcess:2",
+        // MARK: TODO: Figure out the output structure of ssd_mobilenet
+        let outputs = try session.run(withInputs: [inputName: inputTensor],
+                                      outputNames: ["TFLite_Detection_PostProcess",                                                   "TFLite_Detection_PostProcess:1",                                                 "TFLite_Detection_PostProcess:2",
                                                     "TFLite_Detection_PostProcess:3"],
                                       runOptions: try ORTRunOptions())
         interval = Date().timeIntervalSince(startDate) * 1000
