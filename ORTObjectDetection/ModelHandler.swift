@@ -124,10 +124,6 @@ class ModelHandler: NSObject {
         
         let interval: TimeInterval
         //TODO: Make sure the type of each outputs
-        let detectionBoxes = [Float]()
-        let detectionClasses = [Float]()
-        let detectionScores = [Float]()
-        let numDetections = [Int]()
         
         let inputName = "normalized_input_image_tensor"
         
@@ -144,17 +140,18 @@ class ModelHandler: NSObject {
                                        shape: [1, 300, 300, 3])
         /// Run ORT InferenceSession
         let startDate = Date()
-        // MARK: TODO: Figure out the output structure of ssd_mobilenet
         let outputs = try session.run(withInputs: [inputName: inputTensor],
-                                      outputNames: ["TFLite_Detection_PostProcess",                                                   "TFLite_Detection_PostProcess:1",                                                 "TFLite_Detection_PostProcess:2",
-                                                    "TFLite_Detection_PostProcess:3"],
+                                      outputNames: ["TFLite_Detection_PostProcess", "TFLite_Detection_PostProcess:1", "TFLite_Detection_PostProcess:2",
+                                          "TFLite_Detection_PostProcess:3"],
                                       runOptions: try ORTRunOptions())
         interval = Date().timeIntervalSince(startDate) * 1000
         // output order: detection boxes/classes/scores/num_detection
         guard let rawOutputValue = outputs["TFLite_Detection_PostProcess"] else {
                 throw OrtModelError.error("failed to get model output_0")
         }
+        
         let rawOutputData = try rawOutputValue.tensorData() as Data
+     
         guard let outputArr: [Float32] = arrayCopiedFromData(rawOutputData) else {
                 throw OrtModelError.error("failed to copy output data_0")
         }
@@ -162,7 +159,7 @@ class ModelHandler: NSObject {
         guard let rawOutputValue_1 = outputs["TFLite_Detection_PostProcess:1"] else {
                 throw OrtModelError.error("failed to get model output_1")
         }
-        let rawOutputData_1 = try rawOutputValue.tensorData() as Data
+        let rawOutputData_1 = try rawOutputValue_1.tensorData() as Data
         guard let outputArr_1: [Float32] = arrayCopiedFromData(rawOutputData_1) else {
                 throw OrtModelError.error("failed to copy output data_1")
         }
@@ -170,7 +167,7 @@ class ModelHandler: NSObject {
         guard let rawOutputValue_2 = outputs["TFLite_Detection_PostProcess:2"] else {
                 throw OrtModelError.error("failed to get model output_2")
         }
-        let rawOutputData_2 = try rawOutputValue.tensorData() as Data
+        let rawOutputData_2 = try rawOutputValue_2.tensorData() as Data
         guard let outputArr_2: [Float32] = arrayCopiedFromData(rawOutputData_2) else {
                 throw OrtModelError.error("failed to copy output data_2")
         }
@@ -178,35 +175,24 @@ class ModelHandler: NSObject {
         guard let rawOutputValue_3 = outputs["TFLite_Detection_PostProcess:3"] else {
                 throw OrtModelError.error("failed to get model output_3")
         }
-        let rawOutputData_3 = try rawOutputValue.tensorData() as Data
+        let rawOutputData_3 = try rawOutputValue_3.tensorData() as Data
         guard let outputArr_3: [Float32] = arrayCopiedFromData(rawOutputData_3) else {
                 throw OrtModelError.error("failed to copy output data_3")
         }
-        
-        print(outputArr)
-        print(outputArr_1)
-        print(outputArr_2)
-        print(outputArr_3)
-        
-        
-        
+        let detectionBoxes = outputArr
+        let detectionClasses = outputArr_1
+        let detectionScores = outputArr_2
+        let numDetections:Int = Int(outputArr_3[0])
+    
          //Format the results
-//        let resultArray = formatResults(
-//          boundingBox: [Float](unsafeData: outputBoundingBox.data) ?? [],
-//          outputClasses: [Float](unsafeData: outputClasses.data) ?? [],
-//          outputScores: [Float](unsafeData: outputScores.data) ?? [],
-//          outputCount: Int(([Float](unsafeData: outputCount.data) ?? [0])[0]),
-//          width: CGFloat(imageWidth),
-//          height: CGFloat(imageHeight)
-//        )
-//
-        
+        let resultArray = formatResults(detectionBoxes: detectionBoxes, detectionClasses: detectionClasses, detectionScores: detectionScores, numDetections: numDetections, width: CGFloat(imageWidth), height: CGFloat(imageHeight))
+         
         //Return ORT SessionRun result
-        return Result(processTimeMs: 55, inferences: [])
+        return Result(processTimeMs: interval, inferences: resultArray)
     }
     
     // MARK: - Helper Methods
-    func formatResults(detectionBoxes: [Float], detectionClasses: [Float], detectionScores: [Float], numDetections: Int, width: CGFloat, height: CGFloat) -> [Inference] {
+    func formatResults(detectionBoxes: [Float32], detectionClasses: [Float32], detectionScores: [Float32], numDetections: Int, width: CGFloat, height: CGFloat) -> [Inference] {
         
         var resultsArray: [Inference] = []
         
