@@ -19,7 +19,6 @@ class ViewController: UIViewController {
     @IBOutlet weak var overlayView: OverlayView!
     @IBOutlet weak var bottomSheetView: UIView!
     
-    //MARK: TODO - Add more constants
     private let edgeOffset: CGFloat = 2.0
     private let displayFont = UIFont.systemFont(ofSize: 14.0, weight: .medium)
     
@@ -27,13 +26,13 @@ class ViewController: UIViewController {
     private var previousInferenceTimeMs: TimeInterval = Date.distantPast.timeIntervalSince1970 * 1000
     private let delayBetweenInferencesMs: Double = 1000
     
-    // Handles all the camera related functionality
+    // Handle all the camera related functionality
     private lazy var cameraCapture = CameraManager(previewView: previewView)
     
-    // Handles the presenting of results on the screen
+    // Handle the presenting of results on the screen
     private var inferenceViewController: InferenceViewController?
     
-    // Handles all model data preprocessing and makes calls to run inference
+    // Handle all model and data preprocessing and run inference
     private var modelHandler: ModelHandler? = ModelHandler()
     
     // MARK: View Controller Life Cycle
@@ -45,7 +44,6 @@ class ViewController: UIViewController {
         }
         
         cameraCapture.delegate = self
-        //overlayView.clearsContextBeforeDrawing = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -78,10 +76,8 @@ class ViewController: UIViewController {
                 return
             }
             inferenceViewController?.inferenceTime = tempResult.processTimeMs
-            
         }
     }
-    
 }
 
 // MARK: InferenceViewControllerDelegate Methods
@@ -127,26 +123,25 @@ extension ViewController: CameraManagerDelegate {
         else { return }
         previousInferenceTimeMs = currentTimeMs
         
-        // TODO: change the model name
-        result = try! modelHandler?.runModel(onFrame: pixelBuffer, modelFileInfo: (name: "ssd_mobilenet_v2_300_float.all", extension: "ort"), labelsFileInfo: (name: "labels", extension: "txt"))
+        result = try! modelHandler?.runModel(onFrame: pixelBuffer, modelFileInfo: (name: "ssd_mobilenet_v2_300_float.all", extension: "ort"), labelsFileInfo: (name: "labelmap", extension: "txt"))
         
         guard let displayResult = result else {
-          return
+            return
         }
-
-        // Display results by handing off to the InferenceViewController.
+        
+        // Display results by the `InferenceViewController`.
         DispatchQueue.main.async {
             let resolution = CGSize(width: CVPixelBufferGetWidth(pixelBuffer), height: CVPixelBufferGetHeight(pixelBuffer))
             self.inferenceViewController?.resolution = resolution
             
             var inferenceTime: Double = 0
             if let resultInferenceTime = self.result?.processTimeMs {
-              inferenceTime = resultInferenceTime
+                inferenceTime = resultInferenceTime
             }
             self.inferenceViewController?.inferenceTime = inferenceTime
             self.inferenceViewController?.tableView.reloadData()
             
-            //TODO: Draw bounding boxes and compute confidence
+            // Draw bounding boxes and compute the inference score
             self.drawBoundingBoxesAndCalculate(onInferences:displayResult.inferences, withImageSize: CGSize(width: CVPixelBufferGetWidth(pixelBuffer), height: CVPixelBufferGetHeight(pixelBuffer)))
         }
     }
@@ -155,11 +150,11 @@ extension ViewController: CameraManagerDelegate {
         
         self.overlayView.objectOverlays = []
         self.overlayView.setNeedsDisplay()
-
+        
         guard !inferences.isEmpty else {
-          return
+            return
         }
-
+        
         var objectOverlays: [ObjectOverlay] = []
         
         for inference in inferences {
@@ -167,53 +162,51 @@ extension ViewController: CameraManagerDelegate {
             var convertedRect = inference.rect.applying(CGAffineTransform(scaleX: self.overlayView.bounds.size.width / imageSize.width, y: self.overlayView.bounds.size.height / imageSize.height))
             
             if convertedRect.origin.x < 0 {
-              convertedRect.origin.x = self.edgeOffset
-            }
-
-            if convertedRect.origin.y < 0 {
-              convertedRect.origin.y = self.edgeOffset
-            }
-
-            if convertedRect.maxY > self.overlayView.bounds.maxY {
-              convertedRect.size.height = self.overlayView.bounds.maxY - convertedRect.origin.y - self.edgeOffset
-            }
-
-            if convertedRect.maxX > self.overlayView.bounds.maxX {
-              convertedRect.size.width = self.overlayView.bounds.maxX - convertedRect.origin.x - self.edgeOffset
+                convertedRect.origin.x = self.edgeOffset
             }
             
-            let confidenceValue = Int(inference.confidence * 100.0)
-            let string = "\(inference.className)  (\(confidenceValue)%)"
-
-            let size = string.size(usingFont: self.displayFont)
-
-            let objectOverlay = ObjectOverlay(name: string, borderRect: convertedRect, nameStringSize: size, color: inference.displayColor, font: self.displayFont)
-
+            if convertedRect.origin.y < 0 {
+                convertedRect.origin.y = self.edgeOffset
+            }
+            
+            if convertedRect.maxY > self.overlayView.bounds.maxY {
+                convertedRect.size.height = self.overlayView.bounds.maxY - convertedRect.origin.y - self.edgeOffset
+            }
+            
+            if convertedRect.maxX > self.overlayView.bounds.maxX {
+                convertedRect.size.width = self.overlayView.bounds.maxX - convertedRect.origin.x - self.edgeOffset
+            }
+            
+            let scoreValue = Int(inference.score * 100.0)
+            let string = "\(inference.className)  (\(scoreValue)%)"
+            
+            let nameStringsize = string.size(usingFont: self.displayFont)
+            
+            let objectOverlay = ObjectOverlay(name: string, borderRect: convertedRect, nameStringSize: nameStringsize, color: inference.displayColor, font: self.displayFont)
+            
             objectOverlays.append(objectOverlay)
             
         }
-
+        
         //update overlay view with detected bounding boxes and class names.
         self.draw(objectOverlays: objectOverlays)
-
         
     }
     
     func draw(objectOverlays: [ObjectOverlay]) {
-
-      self.overlayView.objectOverlays = objectOverlays
-      self.overlayView.setNeedsDisplay()
+        
+        self.overlayView.objectOverlays = objectOverlays
+        self.overlayView.setNeedsDisplay()
     }
-  
+    
 }
 
 extension String {
-
-  /**This method gets size of a string with a particular font.
-   */
-  func size(usingFont font: UIFont) -> CGSize {
-    let attributedString = NSAttributedString(string: self, attributes: [NSAttributedString.Key.font : font])
-    return attributedString.size()
-  }
-
+    
+    /**This method gets size of a string with a particular font.*/
+    func size(usingFont font: UIFont) -> CGSize {
+        let attributedString = NSAttributedString(string: self, attributes: [NSAttributedString.Key.font : font])
+        return attributedString.size()
+    }
+    
 }

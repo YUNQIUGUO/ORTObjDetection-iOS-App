@@ -21,14 +21,12 @@ import UIKit
 
 /**Result struct*/
 struct Result {
-    //MARK: TODO: change the result struct
     let processTimeMs: Double
     let inferences: [Inference]
 }
 
 struct Inference {
-    //MARK: TODO: change the inference struct
-    let confidence: Float
+    let score: Float
     let className: String
     let rect: CGRect
     let displayColor: UIColor
@@ -39,12 +37,6 @@ typealias FileInfo = (name: String, extension: String)
 
 enum OrtModelError : Error {
     case error(_ message: String)
-}
-
-/// Information about the MobileNet model.
-enum MobileNet {
-    static let modelInfo: FileInfo = (name: "ssd_mobilenet_v2_300_float.all", extension: "ort")
-    static let labelsInfo: FileInfo = (name: "labels", extension: "txt")
 }
 
 class ModelHandler: NSObject {
@@ -59,7 +51,7 @@ class ModelHandler: NSObject {
     let inputChannels = 3
     let inputWidth = 300
     let inputHeight = 300
-        
+    
     private let colors = [
         UIColor.red,
         UIColor(displayP3Red: 90.0/255.0, green: 200.0/255.0, blue: 250.0/255.0, alpha: 1.0),
@@ -123,7 +115,6 @@ class ModelHandler: NSObject {
         let session = try ORTSession(env: env, modelPath: modelPath, sessionOptions: options)
         
         let interval: TimeInterval
-        //TODO: Make sure the type of each outputs
         
         let inputName = "normalized_input_image_tensor"
         
@@ -141,53 +132,57 @@ class ModelHandler: NSObject {
         /// Run ORT InferenceSession
         let startDate = Date()
         let outputs = try session.run(withInputs: [inputName: inputTensor],
-                                      outputNames: ["TFLite_Detection_PostProcess", "TFLite_Detection_PostProcess:1", "TFLite_Detection_PostProcess:2",
-                                          "TFLite_Detection_PostProcess:3"],
+                                      outputNames: ["TFLite_Detection_PostProcess",
+                                                    "TFLite_Detection_PostProcess:1",
+                                                    "TFLite_Detection_PostProcess:2",
+                                                    "TFLite_Detection_PostProcess:3"],
                                       runOptions: try ORTRunOptions())
         interval = Date().timeIntervalSince(startDate) * 1000
-        // output order: detection boxes/classes/scores/num_detection
+        
         guard let rawOutputValue = outputs["TFLite_Detection_PostProcess"] else {
-                throw OrtModelError.error("failed to get model output_0")
+            throw OrtModelError.error("failed to get model output_0")
         }
         
         let rawOutputData = try rawOutputValue.tensorData() as Data
-     
+        
         guard let outputArr: [Float32] = arrayCopiedFromData(rawOutputData) else {
-                throw OrtModelError.error("failed to copy output data_0")
+            throw OrtModelError.error("failed to copy output data_0")
         }
         
         guard let rawOutputValue_1 = outputs["TFLite_Detection_PostProcess:1"] else {
-                throw OrtModelError.error("failed to get model output_1")
+            throw OrtModelError.error("failed to get model output_1")
         }
         let rawOutputData_1 = try rawOutputValue_1.tensorData() as Data
         guard let outputArr_1: [Float32] = arrayCopiedFromData(rawOutputData_1) else {
-                throw OrtModelError.error("failed to copy output data_1")
+            throw OrtModelError.error("failed to copy output data_1")
         }
         
         guard let rawOutputValue_2 = outputs["TFLite_Detection_PostProcess:2"] else {
-                throw OrtModelError.error("failed to get model output_2")
+            throw OrtModelError.error("failed to get model output_2")
         }
         let rawOutputData_2 = try rawOutputValue_2.tensorData() as Data
         guard let outputArr_2: [Float32] = arrayCopiedFromData(rawOutputData_2) else {
-                throw OrtModelError.error("failed to copy output data_2")
+            throw OrtModelError.error("failed to copy output data_2")
         }
         
         guard let rawOutputValue_3 = outputs["TFLite_Detection_PostProcess:3"] else {
-                throw OrtModelError.error("failed to get model output_3")
+            throw OrtModelError.error("failed to get model output_3")
         }
         let rawOutputData_3 = try rawOutputValue_3.tensorData() as Data
         guard let outputArr_3: [Float32] = arrayCopiedFromData(rawOutputData_3) else {
-                throw OrtModelError.error("failed to copy output data_3")
+            throw OrtModelError.error("failed to copy output data_3")
         }
+        
+        // Output order of ssd mobileNet model: detection boxes/classes/scores/num_detection
         let detectionBoxes = outputArr
         let detectionClasses = outputArr_1
         let detectionScores = outputArr_2
         let numDetections:Int = Int(outputArr_3[0])
-    
-         //Format the results
+        
+        // Format the results
         let resultArray = formatResults(detectionBoxes: detectionBoxes, detectionClasses: detectionClasses, detectionScores: detectionScores, numDetections: numDetections, width: CGFloat(imageWidth), height: CGFloat(imageHeight))
-         
-        //Return ORT SessionRun result
+        
+        // Return ORT SessionRun result
         return Result(processTimeMs: interval, inferences: resultArray)
     }
     
@@ -204,7 +199,7 @@ class ModelHandler: NSObject {
             
             let score = detectionScores[i]
             
-            // Filter results with confidence < threshold.
+            // Filter results with score < threshold.
             guard score >= threshold else {
                 continue
             }
@@ -222,9 +217,8 @@ class ModelHandler: NSObject {
             
             let newRect = rect.applying(CGAffineTransform(scaleX: width, y: height))
             
-            // Gets the color assigned for the class
             let colorToAssign = colorForClass(withIndex: detectionClassIndex + 1)
-            let inference = Inference(confidence: score,
+            let inference = Inference(score: score,
                                       className: detectionClass,
                                       rect: newRect,
                                       displayColor: colorToAssign)
@@ -233,12 +227,13 @@ class ModelHandler: NSObject {
         
         // Sort results in descending order of confidence.
         resultsArray.sort { (first, second) -> Bool in
-            return first.confidence  > second.confidence
+            return first.score  > second.score
         }
         
         return resultsArray
     }
     
+    /// Preprocess the image by cropping pixel buffer to biggest square and scaling the cropped image to model dimensions.
     private func preprocess(
         ofSize size: CGSize,
         _ buffer: CVPixelBuffer
@@ -303,7 +298,7 @@ class ModelHandler: NSObject {
         return scaledPixelBuffer
     }
     
-    /// Loads the labels from the labels file and stores them in the `labelData`.
+    
     private func loadLabels(fileInfo: FileInfo) -> [String] {
         var labelData: [String] = []
         let filename = fileInfo.name
@@ -321,11 +316,10 @@ class ModelHandler: NSObject {
         return labelData
     }
     
-    /// This assigns color for a particular class.
+    
     private func colorForClass(withIndex index: Int) -> UIColor {
         
-        // We have a set of colors and the depending upon a stride, it assigns variations to of the base
-        // colors to each object based on its index.
+        // Assign variations to the base colors for each object based on its index.
         let baseColor = colors[index % colors.count]
         
         var colorToAssign = baseColor
@@ -340,7 +334,7 @@ class ModelHandler: NSObject {
     }
     
     
-    /// Returns the RGB data representation of the given image buffer.
+    /// Return  the RGB data representation of the given image buffer.
     func rgbDataFromBuffer(
         _ buffer: CVPixelBuffer,
         byteCount: Int,
@@ -394,7 +388,7 @@ class ModelHandler: NSObject {
         }
         
         let byteData = Data(bytes: destinationBuffer.data, count: destinationBuffer.rowBytes * height)
-        // TODO: Consider quantized model here
+        // MARK: [TODO] Consider quantized model here
         // Not quantized, convert to floats
         let bytes = Array<UInt8>(unsafeData: byteData)!
         var floats = [Float]()

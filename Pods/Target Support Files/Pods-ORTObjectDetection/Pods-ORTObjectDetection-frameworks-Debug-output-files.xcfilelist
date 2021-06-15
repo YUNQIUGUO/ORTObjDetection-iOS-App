@@ -1,2 +1,0 @@
-${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/onnxruntime.framework
-${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/onnxruntime_mobile_objc.framework

@@ -15,11 +15,9 @@ import UIKit
 
 // MARK: InferenceViewControllerDelegate Method Declarations
 protocol InferenceViewControllerDelegate {
-  /**
-   This method is called when the user changes the stepper value to update number of threads used for inference.
-   */
-  func didChangeThreadCount(to count: Int32)
-
+    
+    func didChangeThreadCount(to count: Int32)
+    
 }
 
 class InferenceViewController: UIViewController {
@@ -31,29 +29,29 @@ class InferenceViewController: UIViewController {
     
     // MARK: Inference related display results and info
     private enum InferenceResults: Int, CaseIterable {
-      case InferenceInfo
+        case InferenceInfo
     }
     
     private enum InferenceInfo: Int, CaseIterable {
-      case Resolution
-      case Crop
-      case InferenceTime
-
-      func displayString() -> String {
-
-        var toReturn = ""
-
-        switch self {
-        case .Resolution:
-          toReturn = "Resolution"
-        case .Crop:
-          toReturn = "Crop"
-        case .InferenceTime:
-          toReturn = "Inference Time"
-
+        case Resolution
+        case Crop
+        case InferenceTime
+        
+        func displayString() -> String {
+            
+            var toReturn = ""
+            
+            switch self {
+            case .Resolution:
+                toReturn = "Resolution"
+            case .Crop:
+                toReturn = "Crop"
+            case .InferenceTime:
+                toReturn = "Inference Time"
+                
+            }
+            return toReturn
         }
-        return toReturn
-      }
     }
     
     var inferenceTime: Double = 0
@@ -64,9 +62,9 @@ class InferenceViewController: UIViewController {
     var threadCountLimit: Int = 0
     var currentThreadCount: Int32 = 0
     private let minThreadCount = 1
- 
+    
     var delegate: InferenceViewControllerDelegate?
-
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -79,15 +77,12 @@ class InferenceViewController: UIViewController {
         
     }
     
-    // MARK: Buttion Actions
-    /**
-     Delegate the change of number of threads to View Controller and change the stepper display.
-     */
+    ///Delegate the change of number of threads to View Controller and change the stepper display
     @IBAction func onClickThreadStepper(_ sender: Any) {
-
-      delegate?.didChangeThreadCount(to: Int32(threadStepper.value))
-      currentThreadCount = Int32(threadStepper.value)
-      stepperValueLabel.text = "\(currentThreadCount)"
+        
+        delegate?.didChangeThreadCount(to: Int32(threadStepper.value))
+        currentThreadCount = Int32(threadStepper.value)
+        stepperValueLabel.text = "\(currentThreadCount)"
     }
 }
 
@@ -95,74 +90,72 @@ class InferenceViewController: UIViewController {
 extension InferenceViewController: UITableViewDelegate, UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
-
-      return InferenceResults.allCases.count
+        
+        return InferenceResults.allCases.count
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-
-      guard let inferenceResults = InferenceResults(rawValue: section) else {
-        return 0
-      }
-
-      var rowCount = 0
-      switch inferenceResults {
-      case .InferenceInfo:
-        rowCount = InferenceInfo.allCases.count
-      }
-      return rowCount
+        
+        guard let inferenceResults = InferenceResults(rawValue: section) else {
+            return 0
+        }
+        
+        var rowCount = 0
+        switch inferenceResults {
+        case .InferenceInfo:
+            rowCount = InferenceInfo.allCases.count
+        }
+        return rowCount
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "INFO_CELL") as! InfoCell
-
+        
         guard let inferenceResults = InferenceResults(rawValue: indexPath.section) else {
-          return cell
+            return cell
         }
-
+        
         var fieldName = ""
         var info = ""
-    
+        
         switch inferenceResults {
-
+        
         case .InferenceInfo:
-          let tuple = displayStringsForInferenceInfo(atRow: indexPath.row)
-          fieldName = tuple.0
-          info = tuple.1
-
+            let tuple = displayStringsForInferenceInfo(atRow: indexPath.row)
+            fieldName = tuple.0
+            info = tuple.1
+            
         }
         cell.fieldNameLabel.font = UIFont.systemFont(ofSize: 14.0, weight: .regular)
         cell.fieldNameLabel.textColor = UIColor.black
         cell.fieldNameLabel.text = fieldName
         cell.infoLabel.text = info
-
+        
         return cell
     }
     
-    /**
-     This method formats the display of additional information relating to the inferences.
-     */
+    /// This method formats the display of additional information relating to the inferences.
     func displayStringsForInferenceInfo(atRow row: Int) -> (String, String) {
-
-      var fieldName: String = ""
-      var info: String = ""
-
-      guard let inferenceInfo = InferenceInfo(rawValue: row) else {
-        return (fieldName, info)
-      }
-
-      fieldName = inferenceInfo.displayString()
-
-      switch inferenceInfo {
-      case .Resolution:
-        info = "\(Int(resolution.width))x\(Int(resolution.height))"
-      case .Crop:
-        info = "\(wantedInputWidth)x\(wantedInputHeight)"
-      case .InferenceTime:
-        info = String(format: "%.2fms", inferenceTime)
-      }
-
-      return(fieldName, info)
+        
+        var fieldName: String = ""
+        var info: String = ""
+        
+        guard let inferenceInfo = InferenceInfo(rawValue: row) else {
+            return (fieldName, info)
+        }
+        
+        fieldName = inferenceInfo.displayString()
+        
+        switch inferenceInfo {
+        case .Resolution:
+            info = "\(Int(resolution.width))x\(Int(resolution.height))"
+        case .Crop:
+            info = "\(wantedInputWidth)x\(wantedInputHeight)"
+        case .InferenceTime:
+            info = String(format: "%.2fms", inferenceTime)
+        }
+        
+        return(fieldName, info)
     }
 }

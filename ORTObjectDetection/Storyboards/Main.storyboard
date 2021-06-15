@@ -16,16 +16,16 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jhC-YW-J6Q" customClass="PreviewView" customModule="ORTObjectDetection" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="-20" width="390" height="591"/>
+                                <rect key="frame" x="0.0" y="0.0" width="390" height="571"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tyX-XX-qft" customClass="OverlayView" customModule="ORTObjectDetection" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="-20" width="390" height="559"/>
+                                <rect key="frame" x="0.0" y="0.0" width="390" height="539"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <subviews>
                                     <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RqP-HE-5qz">
-                                        <rect key="frame" x="0.0" y="64" width="390" height="62"/>
+                                        <rect key="frame" x="0.0" y="34" width="390" height="62"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <subviews>
                                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="ort_logo" translatesAutoresizingMaskIntoConstraints="NO" id="SdB-Ww-kKt">
